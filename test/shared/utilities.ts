@@ -4,7 +4,8 @@ import { TransactionReceipt } from "@ethersproject/abstract-provider"
 import bn from "bignumber.js"
 import { BaseContract, BigNumber, BigNumberish } from "ethers"
 import { parseUnits } from "ethers/lib/utils"
-import { TestAggregatorV3, VirtualToken } from "../../typechain/perp-curie"
+import { VirtualToken } from "../../typechain/perp-curie"
+import {TestAggregatorV3} from "../../typechain/test"
 import { UniswapV3Pool } from "../../typechain/uniswap-v3-core"
 
 bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 })

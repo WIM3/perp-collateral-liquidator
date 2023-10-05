@@ -6,13 +6,12 @@ import { ethers, waffle } from "hardhat"
 import { Liquidator as LiquidatorApp } from "../src/liquidator"
 import { LiquidationType } from "../src/metadata"
 import {
-    FactorySidechains,
-    Liquidator,
-    Plain4Basic,
-    Registry,
-    StableSwap3Pool,
-    TestUniswapV3Callee,
-} from "../typechain"
+    FactorySidechains
+} from "../typechain/FactorySidechains"
+import {Liquidator, TestUniswapV3Callee} from "../typechain"
+import {Plain4Basic} from "../typechain/Plain4Basic"
+import {Registry} from "../typechain/Registry"
+import {StableSwap3Pool} from "../typechain/StableSwap3Pool"
 import { BaseToken, ClearingHouse, Exchange, MarketRegistry, Vault } from "../typechain/perp-curie"
 import { TestAggregatorV3, TestERC20 } from "../typechain/test"
 import { UniswapV3Pool } from "../typechain/uniswap-v3-core"
@@ -116,8 +115,10 @@ describe("Liquidator", () => {
     }
 
     beforeEach(async () => {
+        console.log("first block")
+        
         fixture = await loadFixture(createFixture())
-
+        console.log("end first block")
         usdc = fixture.USDC
         weth = fixture.WETH2
         wbtc = fixture.WBTC
@@ -142,13 +143,13 @@ describe("Liquidator", () => {
         UST = fixture.UST
         FRAX = fixture.FRAX
         USDT = fixture.USDT
-
+        
         // initialize usdc/weth pool
         await weth.mint(carol.address, parseEther("1000"))
         await usdc.mint(carol.address, parseUnits("100000", usdcDecimals))
         await poolWethUsdc.initialize(encodePriceSqrt(parseUnits("100", usdcDecimals), parseEther("1"))) // token1: USDC, token0: WETH
         await poolWethUsdc.increaseObservationCardinalityNext((2 ^ 16) - 1)
-
+        
         await addLiquidity({
             pool: poolWethUsdc,
             receipient: carol,
