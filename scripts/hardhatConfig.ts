@@ -1,5 +1,4 @@
 import {
-    COMPANION_NETWORK,
     OPTIMISM_DEPLOYER_MNEMONIC,
     OPTIMISM_GOERLI_DEPLOYER_MNEMONIC,
     OPTIMISM_GOERLI_WEB3_ENDPOINT,
@@ -24,19 +23,4 @@ export function getMnemonic(network: string) {
     return NetworkMnemonic[network] ? NetworkMnemonic[network] : ""
 }
 
-export function hardhatForkConfig() {
-    return COMPANION_NETWORK
-        ? {
-              forking: {
-                  enabled: true,
-                  url: getUrl(COMPANION_NETWORK),
-              },
-              accounts: {
-                  mnemonic: getMnemonic(COMPANION_NETWORK),
-              },
-              companionNetworks: {
-                  fork: COMPANION_NETWORK,
-              },
-          }
-        : {}
-}
+
