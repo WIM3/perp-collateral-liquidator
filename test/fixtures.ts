@@ -88,16 +88,16 @@ export function createFixture(): () => Promise<Fixture> {
 
         const weth9Factory = await ethers.getContractFactory("WETH9")
         const WETH9 = (await weth9Factory.deploy()) as WETH9
-        
+
         const { WETH: WETH2, WBTC, USDC, UST, FRAX, USDT } = await collateralTokensFixture()
         const usdcDecimals = await USDC.decimals()
-        
+
         const collateralPriceFeedFixture = await createCollateralPriceFeedFixture()
         const {
             mockedAggregator: mockedWethAggregator,
             chainlinkPriceFeed: wethChainlinkPriceFeed,
         }: CollateralPriceFeedFixture = await collateralPriceFeedFixture(await WETH2.decimals(), "100")
-        console.log("fixture")
+
         const {
             mockedAggregator: mockedWbtcAggregator,
             chainlinkPriceFeed: wbtcChainlinkPriceFeed,
@@ -107,7 +107,7 @@ export function createFixture(): () => Promise<Fixture> {
             mockedAggregator: mockedUstAggregator,
             chainlinkPriceFeed: ustChainlinkPriceFeed,
         }: CollateralPriceFeedFixture = await collateralPriceFeedFixture(await UST.decimals(), "1")
-        
+
         // ======================================
         // deploy Curve ecosystem
         //

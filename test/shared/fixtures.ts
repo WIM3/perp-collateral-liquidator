@@ -82,9 +82,8 @@ export function createCollateralPriceFeedFixture(): (number, string) => Promise<
     return async (tokenDecimal: number, defaultPrice: string): Promise<CollateralPriceFeedFixture> => {
         const aggregatorFactory = await ethers.getContractFactory("TestAggregatorV3")
         const aggregator = await aggregatorFactory.deploy()
-        
         const mockedAggregator = (await smock.fake(aggregator)) as FakeContract<TestAggregatorV3>
-        console.log("colateral")
+
         mockedAggregator.decimals.returns(async () => {
             return tokenDecimal
         })

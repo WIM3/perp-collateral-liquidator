@@ -9,7 +9,7 @@ import "hardhat-gas-reporter"
 import { HardhatUserConfig } from "hardhat/config"
 import "solidity-coverage"
 import { ChainId, CompanionNetwork } from "./constants"
-import { getMnemonic, getUrl } from "./scripts/hardhatConfig"
+import { getMnemonic, getUrl, hardhatForkConfig } from "./scripts/hardhatConfig"
 
 const config: HardhatUserConfig = {
     solidity: {
@@ -32,7 +32,7 @@ const config: HardhatUserConfig = {
         hardhat: {
             allowUnlimitedContractSize: true,
             saveDeployments: true,
-            
+            ...hardhatForkConfig(),
             // forking: {
             //     enabled: true,
             //     url: "",
