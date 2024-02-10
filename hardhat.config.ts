@@ -10,11 +10,19 @@ import "hardhat-deploy"
 import "hardhat-gas-reporter"
 import { HardhatUserConfig } from "hardhat/config"
 import "solidity-coverage"
+import "@gelatonetwork/web3-functions-sdk/hardhat-plugin";
 
 
 dotenv.config()
 
 const config: HardhatUserConfig = {
+    w3f: {
+        rootDir: "./web3-functions",
+        debug: false,
+        networks: [
+          "opsepolia",
+        ], //(multiChainProvider) injects provider for these networks
+      },
     solidity: {
         version: "0.7.6",
         settings: {
@@ -39,6 +47,14 @@ const config: HardhatUserConfig = {
             },
             chainId: 420,
         },
+        opsepolia: {
+            url: process.env.OPTIMISM_SEPOLIA_URL,
+            accounts: {
+                mnemonic: process.env.MNEMONIC || `0x${process.env.PRIVATE_KEY}` || "",
+            },
+            gas:6000000,
+            chainId: 11155420,
+        }
     },
     dependencyCompiler: {
         // We have to compile from source since UniswapV3 doesn't provide artifacts in their npm package
