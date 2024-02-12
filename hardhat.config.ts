@@ -5,7 +5,6 @@ import "@openzeppelin/hardhat-upgrades"
 import "@typechain/hardhat"
 import dotenv from "dotenv"
 import "hardhat-contract-sizer"
-import "hardhat-dependency-compiler"
 import "hardhat-deploy"
 import "hardhat-gas-reporter"
 import { HardhatUserConfig } from "hardhat/config"
@@ -55,17 +54,6 @@ const config: HardhatUserConfig = {
             gas:6000000,
             chainId: 11155420,
         }
-    },
-    dependencyCompiler: {
-        // We have to compile from source since UniswapV3 doesn't provide artifacts in their npm package
-        paths: [
-            "@uniswap/v3-core/contracts/UniswapV3Factory.sol",
-            "@uniswap/v3-core/contracts/UniswapV3Pool.sol",
-            "@perp/perp-oracle-contract/contracts/PriceFeedDispatcher.sol",
-            "@perp/perp-oracle-contract/contracts/ChainlinkPriceFeedV2.sol",
-            "@perp/perp-oracle-contract/contracts/ChainlinkPriceFeedV3.sol",
-            "@perp/voting-escrow/contracts/SurplusBeneficiary.sol",
-        ],
     },
     contractSizer: {
         // max bytecode size is 24.576 KB
