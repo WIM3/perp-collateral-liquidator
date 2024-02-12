@@ -1,18 +1,15 @@
 import "@nomicfoundation/hardhat-verify"
 import "@nomiclabs/hardhat-ethers"
+import "@nomiclabs/hardhat-vyper"
 import "@nomiclabs/hardhat-waffle"
-import "@openzeppelin/hardhat-upgrades"
 import "@typechain/hardhat"
-import dotenv from "dotenv"
 import "hardhat-contract-sizer"
-import "hardhat-dependency-compiler"
 import "hardhat-deploy"
+import "hardhat-deploy-ethers"
 import "hardhat-gas-reporter"
 import { HardhatUserConfig } from "hardhat/config"
 import "solidity-coverage"
-
-
-dotenv.config()
+import { ChainId } from "./constants"
 
 const config: HardhatUserConfig = {
     solidity: {
@@ -28,6 +25,9 @@ const config: HardhatUserConfig = {
             },
         },
     },
+    vyper: {
+        compilers: [{ version: "0.2.16" }, { version: "0.3.1" }, { version: "0.2.7" }],
+    },
     networks: {
         hardhat: {
             allowUnlimitedContractSize: true,
@@ -40,23 +40,43 @@ const config: HardhatUserConfig = {
             chainId: 420,
         },
     },
-    dependencyCompiler: {
-        // We have to compile from source since UniswapV3 doesn't provide artifacts in their npm package
-        paths: [
-            "@uniswap/v3-core/contracts/UniswapV3Factory.sol",
-            "@uniswap/v3-core/contracts/UniswapV3Pool.sol",
-            "@perp/perp-oracle-contract/contracts/PriceFeedDispatcher.sol",
-            "@perp/perp-oracle-contract/contracts/ChainlinkPriceFeedV2.sol",
-            "@perp/perp-oracle-contract/contracts/ChainlinkPriceFeedV3.sol",
-            "@perp/voting-escrow/contracts/SurplusBeneficiary.sol",
+    namedAccounts: {
+        deployer: 0, // 0 means ethers.getSigners[0]
+        cleanAccount: 1,
+
+        uniswapV3Router: {
+            // TODO WIP
+            [ChainId.OPTIMISM_CHAIN_ID]: "",
+            [ChainId.OPTIMISM_GOERLI_CHAIN_ID]: "",
+        },
+    },
+    // so we can load the contract artifacts in tests
+    external: {
+        contracts: [
+            {
+                artifacts: "node_modules/@openzeppelin/contracts/build",
+            },
+            {
+                artifacts: "node_modules/@uniswap/v3-core/artifacts/contracts",
+            },
+            {
+                artifacts: "node_modules/@uniswap/v3-periphery/artifacts/contracts",
+            },
+            {
+                artifacts: "node_modules/@perp/perp-oracle-contract/artifacts/contracts",
+            },
+            {
+                artifacts: "node_modules/@perp/curie-deployments/optimism-goerli/core/artifacts/contracts",
+            },
+            {
+                artifacts: "test/artifacts",
+            },
         ],
     },
     contractSizer: {
-        // max bytecode size is 24.576 KB
         alphaSort: true,
         runOnCompile: true,
-        disambiguatePaths: true,
-        except: ["@openzeppelin/", "@uniswap/", "@perp/perp-oracle-contract/", "@perp/voting-escrow/", "test/"],
+        disambiguatePaths: false,
     },
     gasReporter: {
         excludeContracts: ["test"],
@@ -66,11 +86,6 @@ const config: HardhatUserConfig = {
         jobs: 4,
         timeout: 120000,
         color: true,
-    },
-    namedAccounts: {
-        deployer: {
-            default: 0,
-        },
     },
     etherscan: {
         apiKey: process.env.OPSCAN_API_KEY,
