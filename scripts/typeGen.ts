@@ -51,25 +51,7 @@ async function main() {
         target: "ethers-v5",
     })
 
-    const targetNoCheckFiles = [
-        `${cwd}/typechain/factories/StableSwap__factory.ts`,
-        `${cwd}/typechain/factories/Plain4Basic__factory.ts`,
-        `${cwd}/typechain/factories/FactorySidechains__factory.ts`,
-        `${cwd}/typechain/factories/Registry__factory.ts`,
-        `${cwd}/typechain/factories/RegistryAddressProvider__factory.ts`,
-        `${cwd}/typechain/factories/StableSwap3Pool__factory.ts`,
-    ]
-
-    for (let i = 0; i < targetNoCheckFiles.length; i++) {
-        try {
-            const filepath = targetNoCheckFiles[i]
-            const data = fs.readFileSync(filepath)
-            fs.writeFileSync(filepath, "// @ts-nocheck\n\n" + data)
-        } catch (e) {
-            console.warn(e.toString())
-        }
-    }
-
+    
     console.log(`type generated`)
 }
 
