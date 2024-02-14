@@ -19,7 +19,7 @@
     "app:optimism": "ENV=optimism ts-node --files src/index.ts",
     "start:optimism-goerli": "ENV=optimism-goerli node build/src/index.js",
     "start:optimism": "ENV=optimism node build/src/index.js",
-    "test": "hardhat test"
+    "test": "hardhat w3f-run liquidator --logs --network opsepolia"
   },
   "dependencies": {
     "@chainlink/contracts": "0.1.7",
