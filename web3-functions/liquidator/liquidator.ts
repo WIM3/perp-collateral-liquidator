@@ -5,10 +5,10 @@ import fetch from "node-fetch"
 import {
     AccountBalance,
     AccountBalance__factory,
-    ClearingHouse,
-    ClearingHouse__factory,
 } from "../../typechain/perp-curie"
 import { sleep } from "./utils"
+import {Contract} from "@ethersproject/contracts"
+import {clearingHouseAbi} from "./abis/abis"
 
 interface GraphData {
     id: string
@@ -18,6 +18,11 @@ export type Config = {
     subgraphEndPt: string
     provider: providers.StaticJsonRpcProvider
     clearingHouseAddr: string
+}
+
+type CallData = {
+    to: string,
+    data: string,
 }
 
 class CustomError extends Error {
@@ -36,31 +41,27 @@ const REQUEST_CHUNK_SIZE = 25
 export class Liquidator {
     config: Config
     subgraphEndpoint: string
-    clearingHouse: ClearingHouse
+    clearingHouse: Contract
     mutex: Mutex
     accountBalance: AccountBalance
     provider: providers.StaticJsonRpcProvider
-    liquidatedAccountsCounter: number = 0
 
     async setup(config: Config): Promise<void> {
-        console.log({
-            event: "SetupLiquidator",
-            params: { config },
-        })
         this.config = config
         this.subgraphEndpoint = this.config.subgraphEndPt
 
         this.mutex = new Mutex()
-        this.clearingHouse = ClearingHouse__factory.connect(this.config.clearingHouseAddr, this.config.provider)
+        this.clearingHouse = new Contract(this.config.clearingHouseAddr, clearingHouseAbi, this.config.provider)
         this.accountBalance = AccountBalance__factory.connect(
             await this.clearingHouse.getAccountBalance(),
             this.config.provider,
         )
     }
 
-    async start(): Promise<Number> {
+    async start(): Promise<CallData[]> {
         let makers: string[]
         let traders: string[]
+        let accountsToLiquidate: CallData[] = []
         while (true) {
             try {
                 const results = await Promise.all([this.fetchAccounts("makers"), this.fetchAccounts("traders")])
@@ -85,13 +86,18 @@ export class Liquidator {
 
         for (const chunkedAccounts of _.chunk(accounts, REQUEST_CHUNK_SIZE)) {
             await Promise.all(
-                chunkedAccounts.map(account => {
-                    console.log({ event: "TryLiquidateAccountCollateral", params: account })
-                    return this.liquidate(account)
+                chunkedAccounts.map(async (account) => {
+                    let data = await this.liquidate(account)
+                    if(data !== ""){
+                        accountsToLiquidate.push({
+                            to: this.config.clearingHouseAddr,
+                            data: data
+                        })
+                    }
                 }),
             )
         }
-        return this.liquidatedAccountsCounter
+        return accountsToLiquidate
     }
 
     async fetchAccounts(type: "traders" | "makers"): Promise<string[]> {
@@ -155,52 +161,10 @@ export class Liquidator {
         return data
     }
 
-    async liquidateCollateral(account: string): Promise<void> {
+    async liquidateCollateral(account: string): Promise<string> {
         const baseTokens = await this.accountBalance.getBaseTokens(account)
-        baseTokens.forEach(async baseToken => {
-            try {
-                const tx = await this.clearingHouse["liquidate(address,address)"](account, baseToken)
-                console.log({
-                    event: `Send TxSucceeded`,
-                    params: {
-                        account,
-                        baseToken: baseToken,
-                        txHash: tx.hash,
-                    },
-                })
-
-                await this.txCheck(tx)
-            } catch (e) {
-                const error = new CustomError(`Send TxFailed`, {
-                    params: {
-                        account,
-                        baseToken: baseToken,
-                        reason: e.toString(),
-                    },
-                })
-                throw error
-            }
-        })
-    }
-
-    async txCheck(tx: ContractTransaction): Promise<void> {
-        try {
-            await tx.wait()
-            console.log({
-                event: `TX Succeeded`,
-                params: {
-                    txHash: tx.hash,
-                },
-            })
-        } catch (e) {
-            console.error({
-                event: `TX Failed`,
-                params: {
-                    txHash: tx.hash,
-                    reason: e.toString(),
-                },
-            })
-        }
+        // for the Demo the only baseToken will be vETH
+        return this.clearingHouse.interface.encodeFunctionData("liquidate", [account, baseTokens[0]])
     }
 
     async isLiquidatable(account: string): Promise<boolean> {
@@ -209,14 +173,14 @@ export class Liquidator {
         return accValue < mrfl
     }
 
-    async liquidate(account: string): Promise<void> {
+    async liquidate(account: string): Promise<string> {
         if (!(await this.isLiquidatable(account))) {
-            return
+            return ""
         }
 
         try {
-            this.liquidatedAccountsCounter+=1
-            await this.liquidateCollateral(account)
+            let data = await this.liquidateCollateral(account)
+            return data
         } catch (e) {
             console.error({ event: e.name, params: e.params || {} })
         }

@@ -15,10 +15,18 @@ Web3Function.onRun(async (context: Web3FunctionContext) => {
         provider: provider,
         clearingHouseAddr: clearingHouseAddr,
     })
-    const accCount = await liquidator.start()
+    const accToLiquidate = await liquidator.start()
+
+    if(accToLiquidate.length === 0){
+        return {
+            canExec: false,
+            message: `there is no accounts to be liquidated`,            
+        }
+    }
 
     return {
-        canExec: false,
-        message: `liquidated ${accCount} accounts`,
+        canExec: true,
+        callData: accToLiquidate,
+        message: `liquidated ${accToLiquidate.length} accounts`,
     }
 })
